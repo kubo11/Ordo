@@ -1,7 +1,5 @@
 #include "ordo/command_manager.h"
 
-#include <iostream>
-
 namespace ordo {
 CommandManager::CommandManager(ChildProcessManager& child_proc_manager, ShortcutManager& shortcut_manager)
   : m_child_process_manager{child_proc_manager}, m_shortcut_manager{shortcut_manager}, m_commands{} {}
@@ -37,7 +35,6 @@ bool CommandManager::handle_keyboard_event(const MirKeyboardEvent* kev) {
   auto cmd = m_shortcut_manager.get_command(KeyCombo{mods, key});
   if (!cmd.has_value())
     return false;
-
 
   if (cmd.value().is_builtin) {
     if (m_commands.contains(cmd.value().value)) {

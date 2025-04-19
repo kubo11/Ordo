@@ -53,13 +53,13 @@ int main(int argc, char const* argv[]){
     WaylandExtensions::zwlr_foreign_toplevel_manager_v1
   });
 
-  CommandManager command_manager{*child_process_manager, shortcut_manager};
+  auto command_manager = RunnerOptionWrapper<CommandManager>::create(*child_process_manager, shortcut_manager);
 
   // Add shortcut for exiting compositor in debug mode
 #ifndef NDEBUG
   MirInputEventModifiers mods = mir_input_event_modifier_alt | mir_input_event_modifier_ctrl;
   shortcut_manager.add_shortcut(std::move(ordo::KeyCombo{mods, XKB_KEY_BackSpace}), std::move(ordo::Command{"exit", true, false}));
-  command_manager.add_command("exit", [&runner](){ runner.stop(); });
+  (*command_manager).add_command("exit", [&runner](){ runner.stop(); });
 #endif // NDEBUG
 
   return runner.run_with({
@@ -69,7 +69,7 @@ int main(int argc, char const* argv[]){
     extensions,
     child_process_manager,
     shortcut_manager,
-    AppendEventFilter{std::bind(&CommandManager::handle_event, command_manager, std::placeholders::_1)},
-    set_window_management_policy<WindowManagerPolicy>()
+    AppendEventFilter{[&](const MirEvent* kev){return (*command_manager).handle_event(kev);}},
+    set_window_management_policy<WindowManagerPolicy>(command_manager)
   });
 }
